@@ -1,5 +1,9 @@
 /*******************
  * Christian A. Duncan
+ * Edited By:
+ * Khaled Abu-Ghazaleh
+ * Chris Kosior
+ * Glen Levine
  * CSC350: Intelligent Systems
  * Spring 2017
  *
@@ -22,7 +26,7 @@ import java.util.Random;
 public class NimAI implements AI {
     public NimGame game;  // The game that this AI system is playing
     Random ran;
-    
+
     public NimAI() {
         game = null;
         ran = new Random();
@@ -31,44 +35,49 @@ public class NimAI implements AI {
     public void attachGame(Game g) {
         game = (NimGame) g;
     }
-    
+
     /**
      * Returns the Move as a String "R,S"
      *    R=Row
      *    S=Sticks to take from that row
      **/
     public synchronized String computeMove() {
+
         if (game == null) {
             System.err.println("CODE ERROR: AI is not attached to a game.");
             return "0,0";
         }
-        
+
         int[] rows = (int[]) game.getStateAsObject();
-        
-        int r = 0;
-        int take = 1;
+
+        int targetRow = 0;
+        int takeCount = 1;
         int nimSum = 0;
-        
-        for (int i = 0; i < rows.length; ++i) {
-        	nimSum ^= rows[i];
+
+        // Compute the nim sum by XOR'ing all rows sequentially
+        for (int r = 0; r < rows.length; ++r) {
+        	nimSum ^= rows[r];
         }
-        
+
         if (nimSum > 0) {
-        	for (int i = 0; i < rows.length; ++i) {
-        		int row = rows[i];
-        		int xor = nimSum ^ rows[i];
-        		if (xor < row) {
-        			take = row - xor;
-        			r = i;
+          // In the case that we are "at an advantage"
+        	for (int r = 0; r < rows.length; ++r) {
+        		int rowSum = rows[r];
+        		int rowXOR = nimSum ^ rows[r];
+            // Can we optimize the current row?
+        		if (rowXOR < rowSum) {
+        			takeCount = rowSum - rowXOR;
+        			targetRow = r;
         			break;
         		}
         	}
         } else {
-        	r = ran.nextInt(rows.length);
+          // In the case that all we can do is pray
+        	targetRow = ran.nextInt(rows.length);
         }
 
-        return r + "," + take;
-    }        
+        return targetRow + "," + takeCount;
+    }
 
     /**
      * Inform AI who the winner is
